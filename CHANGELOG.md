@@ -1,5 +1,9 @@
 # rufus ChangeLog
 
+## 0.5.7 - 2014-12-18
+
+ - Fix console handler and how used levels
+
 ## 0.5.6 - 2014-02-03
 
  - Bug in rotating handler
