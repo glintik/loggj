@@ -1,32 +1,19 @@
 {
-  "name": "rufus",
-  "version": "0.5.7",
+  "name": "loggj",
+  "version": "1.0.0",
   "dependencies": {
-    "bluebird": "^2.0.0",
-    "chalk": "0.5.1",
-    "stack-trace": "0.0.9"
+    "bluebird": "^3.3.4",
+    "chalk": "^1.1.1",
+    "lockfile": "^1.0.1"
   },
-  "devDependencies": {
-    "jshint": "2.3.0",
-    "mocha": "1.13.0",
-    "sinon": "~1.7.3",
-    "istanbul": "~0.2.4",
-    "benchmark": "1.0.0",
-    "intel": "latest",
-    "winston": "latest",
-    "bunyan": "latest",
-    "log4js": "latest"
-  },
+  "devDependencies": {},
   "description": "Fast hierarchical text logger",
   "main": "./lib/index.js",
-  "scripts": {
-    "test": "make test"
-  },
-  "bugs": "https://github.com/btd/rufus/issues",
-  "homepage": "http://btd.github.io/rufus",
+  "scripts": {},
+  "bugs": "https://github.com/glintik/loggj/issues",
   "repository": {
     "type": "git",
-    "url": "https://github.com/btd/rufus.git"
+    "url": "https://github.com/glintik/loggj.git"
   },
   "keywords": [
     "log",
@@ -34,11 +21,6 @@
     "logger",
     "console"
   ],
-  "author": "Denis Bardadym <bardadymchik@gmail.com>",
-  "licenses": [
-    {
-      "type": "MPL 2.0",
-      "url": "https://mozilla.org/MPL/2.0/"
-    }
-  ]
+  "author": "Alex Kubyshkin <i.am.glint@gmail.com>",
+  "license": "MIT"
 }
