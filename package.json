@@ -1,12 +1,16 @@
 {
   "name": "loggj",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "dependencies": {
     "bluebird": "^3.3.4",
     "chalk": "^1.1.1",
-    "lockfile": "^1.0.1"
+    "lockfile": "^1.0.1",
+    "stack-trace": "0.0.9"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "mocha": "^2.4.5",
+    "sinon": "^1.17.3"
+  },
   "description": "Fast hierarchical text logger",
   "main": "./lib/index.js",
   "scripts": {},
