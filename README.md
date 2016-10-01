@@ -1,5 +1,7 @@
 # rufus
 
+[![Join the chat at https://gitter.im/loggj/Lobby](https://badges.gitter.im/loggj/Lobby.svg)](https://gitter.im/loggj/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 This is a fork of [intel](https://github.com/seanmonstar/intel). With changes required by myself and a bit more performance stable (does not depends from format of log too much).
 
 ## Why fork?
