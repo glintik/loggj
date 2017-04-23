@@ -1,6 +1,6 @@
 {
   "name": "loggj",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "dependencies": {
     "bluebird": "^3.3.4",
     "chalk": "^1.1.1",
@@ -25,6 +25,6 @@
     "logger",
     "console"
   ],
-  "author": "Alex Kubyshkin <i.am.glint@gmail.com>",
+  "author": "Alex Kubyshkin <glint@mekonik.com>",
   "license": "MIT"
 }
