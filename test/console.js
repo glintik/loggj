@@ -32,7 +32,7 @@ describe('Console replacement', function() {
 
   after(function() {
     rufus.console.restore();
-    assert.equal(console.log, mockLog);
+    assert.strictEqual(console.log, mockLog);
     console.log = prevLog;
     rufus._handlers = [];
   });
@@ -41,14 +41,14 @@ describe('Console replacement', function() {
   it('can inject into global scope', function() {
     console.warn('test');
     assert(spy._lastRecord);
-    assert.equal(spy._lastRecord.message, 'test');
+    assert.strictEqual(spy._lastRecord.message, 'test');
   });
 
   it('can generate a name', function() {
     console.log('foo');
-    assert.equal(spy._lastRecord.name, 'test.console');
+    assert.strictEqual(spy._lastRecord.name, 'test.console');
 
     consoleUtil('bar');
-    assert.equal(spy._lastRecord.name, 'test.util.console');
+    assert.strictEqual(spy._lastRecord.name, 'test.util.console');
   });
 });

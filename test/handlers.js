@@ -15,7 +15,7 @@ var glob = require('../lib/utils/re-glob');
 var NOW = Date.now();
 var counter = 1;
 function tmp() {
-  return path.join(os.tmpDir(),
+  return path.join(os.tmpdir(),
     'rufus-' + NOW + '-' + process.pid + '-' + (counter++));
 }
 
@@ -35,12 +35,12 @@ describe('Handler', function () {
   describe('constructor', function () {
     it('should accept options', function () {
       var h = new rufus.Handler({ level: rufus.ERROR });
-      assert.equal(h.level, rufus.ERROR);
+      assert.strictEqual(h.level, rufus.ERROR);
     });
 
     it('should accept a level', function () {
       var h = new rufus.Handler(rufus.WARN);
-      assert.equal(h.level, rufus.WARN);
+      assert.strictEqual(h.level, rufus.WARN);
     });
   });
 
@@ -71,12 +71,13 @@ describe('Handler', function () {
 
       h.addFilter(rufus.makeFilter('foo'));
       h.handle({ name: 'foo' }).then(function () {
-        assert.equal(lastRecord.name, 'foo');
+        assert.strictEqual(lastRecord.name, 'foo');
 
         return h.handle({ name: 'foobar' });
       }).then(function () {
           assert.notEqual(lastRecord.name, 'foobar');
-        }).done(done);
+          done();
+        });
     });
   });
 
@@ -97,16 +98,16 @@ describe('Stream', function () {
         stream: stream
       });
 
-      assert.equal(handler.level, rufus.INFO);
-      assert.equal(handler._stream, stream);
+      assert.strictEqual(handler.level, rufus.INFO);
+      assert.strictEqual(handler._stream, stream);
     });
 
     it('should accept just a stream', function () {
       var stream = {};
       var handler = new rufus.handlers.Stream(stream);
 
-      assert.equal(handler.level, rufus.NOTSET);
-      assert.equal(handler._stream, stream);
+      assert.strictEqual(handler.level, rufus.NOTSET);
+      assert.strictEqual(handler._stream, stream);
     });
   });
 
@@ -125,7 +126,7 @@ describe('Stream', function () {
         formatter: new rufus.Formatter('%message%n')
       });
       handler.handle({ message: 'foo', args: ['foo'] }).then(function () {
-        assert.equal(out, 'foo\n');
+        assert.strictEqual(out, 'foo\n');
         done();
       });
     });
@@ -144,8 +145,9 @@ describe('Stream', function () {
         formatter: new rufus.Formatter('%message%n')
       });
       handler.handle({ message: 'secret', args: ['secret'] }).then(function () {
-        assert.equal(out, 'secret\n');
-      }).done(done);
+        assert.strictEqual(out, 'secret\n');
+        done();
+      });
     });
   });
 });
@@ -159,15 +161,15 @@ describe('File', function () {
         file: filename
       });
 
-      assert.equal(handler.level, rufus.WARN);
-      assert.equal(handler._file, filename);
+      assert.strictEqual(handler.level, rufus.WARN);
+      assert.strictEqual(handler._file, filename);
     });
 
     it('should accept a filename', function () {
       var filename = tmp();
       var handler = new rufus.handlers.File(filename);
 
-      assert.equal(handler._file, filename);
+      assert.strictEqual(handler._file, filename);
     });
   });
 
@@ -184,7 +186,7 @@ describe('File', function () {
           assert.equal(contents.toString(), 'recon\n');
           done();
         });
-      }).done();
+      });
     });
   });
 });
@@ -193,8 +195,8 @@ describe('Console', function () {
   describe('constructor', function () {
     it('should use stdout and stderr', function () {
       var h = new rufus.handlers.Console();
-      assert.equal(h._out._stream, process.stdout);
-      assert.equal(h._err._stream, process.stderr);
+      assert.strictEqual(h._out._stream, process.stdout);
+      assert.strictEqual(h._err._stream, process.stderr);
     });
   });
 
@@ -214,8 +216,9 @@ describe('Console', function () {
       };
 
       h.handle({ level: rufus.INFO, message: 'oscar mike', args: ['oscar mike'] }).then(function () {
-        assert.equal(val, 'oscar mike\n');
-      }).done(done);
+        assert.strictEqual(val, 'oscar mike\n');
+        done();
+      });
     });
 
     it('should send warn and higher messages to stderr', function (done) {
@@ -233,8 +236,8 @@ describe('Console', function () {
       };
 
       h.handle({ level: rufus.WARN, message: 'mayday', args: ['mayday'] }).then(function () {
-        assert.equal(val, 'mayday\n');
-      }).done(done);
+        assert.strictEqual(val, 'mayday\n');
+      }).then(done);
     });
   });
 });
@@ -251,13 +254,13 @@ describe('Console', function () {
         formatter: new rufus.Formatter('%message%n')
       });
 
-      assert.equal(handler._file, filename);
+      assert.strictEqual(handler._file, filename);
       handler.handle(rec(bytes(60)));
       handler.handle(rec(bytes(50)));
       handler.handle(rec(bytes(45))).then(function () {
-        assert.equal(fs.statSync(filename).size, 46);
-        assert.equal(fs.statSync(filename + '.1').size, 51);
-        assert.equal(fs.statSync(filename + '.2').size, 61);
+        assert.strictEqual(fs.statSync(filename).size, 46);
+        assert.strictEqual(fs.statSync(filename + '.1').size, 51);
+        assert.strictEqual(fs.statSync(filename + '.2').size, 61);
       }).done(done);
     });
 
@@ -304,9 +307,9 @@ describe('Console', function () {
       handler.handle({ message: bytes(55), args: [bytes(55)] });
       handler.handle({ message: bytes(60), args: [bytes(60)] });
       handler.handle({ message: bytes(45), args: [bytes(45)] }).then(function () {
-        assert.equal(fs.statSync(filename).size, 46);
-        assert.equal(fs.statSync(filename + '.1').size, 61);
-        assert.equal(fs.statSync(filename + '.2').size, 56);
+        assert.strictEqual(fs.statSync(filename).size, 46);
+        assert.strictEqual(fs.statSync(filename + '.1').size, 61);
+        assert.strictEqual(fs.statSync(filename + '.2').size, 56);
         assert(!fs.existsSync(filename + '.3'));
       }).done(done);
     });
@@ -324,7 +327,7 @@ describe('Console', function () {
       handler.handle({ message: bytes(29), args: [bytes(29)] }).then(function () {
         return handler.handle({ message: bytes(31), args: [bytes(31)] });
       }).then(function () {
-          assert.equal(fs.statSync(filename).size, 62);
+          assert.strictEqual(fs.statSync(filename).size, 62);
         }).done(done);
     });
   });

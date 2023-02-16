@@ -12,7 +12,7 @@ var rufus = require('../');
 var NOW = Date.now();
 var counter = 1;
 function tmp() {
-  return path.join(os.tmpDir(),
+  return path.join(os.tmpdir(),
     'rufus-' + NOW + '-' + process.pid + '-' + (counter++));
 }
 
@@ -69,37 +69,37 @@ describe('basicConfig', function () {
     };
 
     rufus.info('danger').then(function () {
-      assert.equal(val, 'danger');
-      assert.equal(rufus._level, oldLevel);
-    }).done(done);
-
+      assert.strictEqual(val, 'danger');
+      assert.strictEqual(rufus._level, oldLevel);
+      done();
+    });
   });
 
   it('only works once', function () {
     rufus.basicConfig();
-    assert.equal(rufus._level, oldLevel);
+    assert.strictEqual(rufus._level, oldLevel);
 
     rufus.basicConfig({ level: 'critical' });
-    assert.equal(rufus._handlers.length, 1);
-    assert.equal(rufus._level, oldLevel);
+    assert.strictEqual(rufus._handlers.length, 1);
+    assert.strictEqual(rufus._level, oldLevel);
   });
 
   it('works with file option', function () {
     var name = tmp();
     rufus.basicConfig({ file: name });
-    assert.equal(rufus._handlers.length, 1);
-    assert.equal(rufus._handlers[0]._file, name);
+    assert.strictEqual(rufus._handlers.length, 1);
+    assert.strictEqual(rufus._handlers[0]._file, name);
   });
 
 
   it('works with level', function () {
     rufus.basicConfig({ level: 'error' });
-    assert.equal(rufus._level, rufus.ERROR);
+    assert.strictEqual(rufus._level, rufus.ERROR);
   });
 
   it('works with format', function () {
     rufus.basicConfig({ format: '%msg'});
-    assert.equal(rufus._handlers[0]._formatter._format, '%msg');
+    assert.strictEqual(rufus._handlers[0]._formatter._format, '%msg');
   });
 
   afterEach(function () {
@@ -149,30 +149,31 @@ describe('config', function () {
 
     var log = rufus.getLogger('qqq.zzz');
     var handler = log._handlers[0];
-    assert.equal(log._handlers.length, 1);
+    assert.strictEqual(log._handlers.length, 1);
     assert(!log.propagate);
 
     var msg = handler.format({ message: 'hi', args: [ 'hi' ], levelname: 'BAR'});
-    assert.equal(msg, 'foo! BAR: hi');
+    assert.strictEqual(msg, 'foo! BAR: hi');
 
     log.debug('user').then(function () {
-      assert.equal(handler.spy.getCallCount(), 0);
+      assert.strictEqual(handler.spy.getCallCount(), 0);
 
       return log.info('user foo');
     }).then(function () {
-        assert.equal(handler.spy.getCallCount(), 1);
-        assert.equal(handler.spy.getLastArgs()[0].message, 'user foo');
+        assert.strictEqual(handler.spy.getCallCount(), 1);
+        assert.strictEqual(handler.spy.getLastArgs()[0].message, 'user foo');
 
         return log.info('ignore me');
       }).then(function () {
-        assert.equal(handler.spy.getCallCount(), 1);
-      }).done(done);
+        assert.strictEqual(handler.spy.getCallCount(), 1);
+        done();
+      });
   });
 
   it('should be able to config with just JSON', function () {
     rufus.config(require('./util/config.json'));
 
     var log = rufus.getLogger('test.config.json');
-    assert.equal(log._handlers.length, 2);
+    assert.strictEqual(log._handlers.length, 2);
   });
 });

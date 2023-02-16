@@ -1,19 +1,20 @@
 {
   "name": "loggj",
-  "version": "1.0.4",
+  "version": "1.0.7",
   "dependencies": {
-    "bluebird": "^3.3.4",
     "chalk": "^1.1.1",
     "lockfile": "^1.0.1",
     "stack-trace": "0.0.9"
   },
   "devDependencies": {
-    "mocha": "^2.4.5",
+    "mocha": "^10.2.0",
     "sinon": "^1.17.3"
   },
   "description": "Fast hierarchical text logger",
   "main": "./lib/index.js",
-  "scripts": {},
+  "scripts": {
+    "test": "node_modules/.bin/mocha test --recursive"
+  },
   "bugs": "https://github.com/glintik/loggj/issues",
   "repository": {
     "type": "git",

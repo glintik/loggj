@@ -32,7 +32,7 @@ describe('Logger', function() {
     var logger1 = new Logger(name);
     var logger2 = new Logger(name);
 
-    assert.equal(logger1, logger2);
+    assert.strictEqual(logger1, logger2);
   });
 
   it('should allow add handlers and remove them', function() {
@@ -40,10 +40,10 @@ describe('Logger', function() {
     var handler = new rufus.handlers.Null();
 
     logger.addHandler(handler);
-    assert.equal(logger.getHandlers().length, 1);
+    assert.strictEqual(logger.getHandlers().length, 1);
 
     logger.removeHandler(handler);
-    assert.equal(logger.getHandlers().length, 0);
+    assert.strictEqual(logger.getHandlers().length, 0);
   });
 
   it('should set by default for child logger log level of its direct parent', function() {
@@ -54,7 +54,7 @@ describe('Logger', function() {
     var childName = parentName + '.' + unique();
     var child = new Logger(childName);
 
-    assert.equal(child.getEffectiveLevel(), rufus.ERROR);
+    assert.strictEqual(child.getEffectiveLevel(), rufus.ERROR);
   });
 
   it('should make record', function() {
@@ -67,14 +67,14 @@ describe('Logger', function() {
     var args = [ msg, err ];
     var record = logger.makeRecord(name, 'DEBUG', msg, args.slice());
 
-    assert.equal(record.name, name);
-    assert.equal(record.level, level);
-    assert.equal(record.message, msg);
-    assert.equal(record.levelname, 'DEBUG');
-    assert.equal(record.pid, process.pid);
-    assert.equal(record.args.length, args.length - 1); //it is because last arg is Error
-    assert.equal(record.args[0], msg);
-    assert.equal(record.err, err);
+    assert.strictEqual(record.name, name);
+    assert.strictEqual(record.level, level);
+    assert.strictEqual(record.message, msg);
+    assert.strictEqual(record.levelname, 'DEBUG');
+    assert.strictEqual(record.pid, process.pid);
+    assert.strictEqual(record.args.length, args.length - 1); //it is because last arg is Error
+    assert.strictEqual(record.args[0], msg);
+    assert.strictEqual(record.err, err);
   });
 
   /*it('should call its handlers', function() {
@@ -170,8 +170,8 @@ describe('Logger', function() {
     logger.addHandler(h);
 
     logger.info('bar').then(null, function(err) {
-      assert.equal(err.message, 'foo');
-    }).done(done);
+      assert.strictEqual(err.message, 'foo');
+    }).then(done);
   });
 });
 
@@ -182,7 +182,7 @@ module.exports = {
         this.slow(300);
 
         spawn(false, function(err, stdout, stderr) {
-          assert.equal(stderr, 'root.ERROR - Uncaught exception handled');
+          assert.strictEqual(stderr, 'root.ERROR - Uncaught exception handled');
           done();
         });
       },
@@ -190,8 +190,8 @@ module.exports = {
         this.slow(300);
 
         spawn(true, function(err, stdout, stderr) {
-          assert.equal(stderr, 'root.ERROR - Uncaught exception handled');
-          assert.equal(stdout, 'root.INFO - noexit');
+          assert.strictEqual(stderr, 'root.ERROR - Uncaught exception handled');
+          assert.strictEqual(stdout, 'root.INFO - noexit');
           done();
         });
       }

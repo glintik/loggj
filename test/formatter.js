@@ -12,7 +12,7 @@ var rufus = require('../');
 describe('Formatter', function() {
   it('should accept a format string', function() {
     var formatter = new rufus.Formatter('%level');
-    assert.equal(formatter._format, '%level');
+    assert.strictEqual(formatter._format, '%level');
   });
 
   it('should accept options', function() {
@@ -20,7 +20,7 @@ describe('Formatter', function() {
       format: '%level'
     });
 
-    assert.equal(formatter._format, '%level');
+    assert.strictEqual(formatter._format, '%level');
   });
 
   it('should output an Error stack', function() {
@@ -37,8 +37,7 @@ describe('Formatter', function() {
       err: e
     };
 
-    assert.equal(formatter.format(record),
-      name + ': ' + msg + EOL + e.stack + EOL);
+    assert.strictEqual(formatter.format(record), name + ': ' + msg + EOL + e.stack + EOL);
   });
 
   it('should allow to set date format', function() {
@@ -58,6 +57,33 @@ describe('Formatter', function() {
       return '0' + val;
     }
     var expected = d.getFullYear() + '-' + pad(d.getMonth() + 1);
-    assert.equal(formatter.format(record), expected);
+    assert.strictEqual(formatter.format(record), expected);
+  });
+
+  it('should format as json', function() {
+    var formatter = new rufus.Formatter({
+      format: 'json'
+    });
+
+    var e = new Error('boom');
+
+    let message = 'some message';
+    var record = {
+      name: 'some name',
+      message,
+      args: [message, 1, 'abc'],
+      levelname: 'INFO',
+      pid: 123,
+      timestamp: new Date(),
+      err: e,
+    };
+
+    let recordExpected = Object.assign({}, record, {
+      err: e.stack,
+      message: `${message} 1 abc`
+    });
+    delete recordExpected.args;
+
+    assert.strictEqual(formatter.format(record), JSON.stringify(recordExpected) + EOL);
   });
 });

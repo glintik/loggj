@@ -9,9 +9,9 @@ rufus.addHandler(new rufus.handlers.Console({
 }));
 rufus.handleExceptions(process.argv.indexOf('--noexit') === -1);
 
-setTimeout(function() {
+/*setTimeout(function() {
   throw new Error('catch me if you can');
-}, 5);
+}, 5);*/
 
 setTimeout(function() {
   rufus.info('noexit');
