@@ -1,6 +1,6 @@
 {
   "name": "loggj",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "dependencies": {
     "chalk": "^1.1.1",
     "lockfile": "^1.0.1",
