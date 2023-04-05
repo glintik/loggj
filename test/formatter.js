@@ -69,15 +69,15 @@ describe('Formatter', function() {
 
     let message = 'some message';
     var record = {
+      timestamp: new Date(),
+      levelname: 'INFO',
       name: 'some name',
+      pid: 123,
       message,
       args: [message, 1, 'abc'],
-      levelname: 'INFO',
-      pid: 123,
-      timestamp: new Date(),
       err: e,
     };
-
+    //      ['timestamp', 'levelname', 'name', 'pid', 'message'].forEach(k => {
     let recordExpected = Object.assign({}, record, {
       err: e.stack,
       message: `${message} 1 abc`
