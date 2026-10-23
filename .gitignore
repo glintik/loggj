@@ -4,3 +4,4 @@ npm-debug.log
 coverage
 logs/
 tmp/
+.claude/settings.local.json
