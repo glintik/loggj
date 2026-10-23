@@ -1,14 +1,8 @@
-REPORTER = spec
-
 test:
-	@NODE_ENV=test ./node_modules/.bin/mocha \
-	--check-leaks \
-	--reporter $(REPORTER)
+	@NODE_ENV=test npm test
 
 test-cov:
-	@NODE_ENV=test ./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha -- \
-	--check-leaks \
-	--reporter $(REPORTER)
+	@NODE_ENV=test npm run coverage
 
 jshint:
 	./node_modules/.bin/jshint --show-non-errors lib test

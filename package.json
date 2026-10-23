@@ -1,19 +1,17 @@
 {
   "name": "loggj",
-  "version": "1.0.11",
+  "version": "2.0.0",
   "dependencies": {
-    "chalk": "^1.1.1",
-    "lockfile": "^1.0.1",
-    "stack-trace": "0.0.9"
-  },
-  "devDependencies": {
-    "mocha": "^10.2.0",
-    "sinon": "^1.17.3"
+    "lockfile": "^1.0.4"
   },
   "description": "Fast hierarchical text logger",
   "main": "./lib/index.js",
+  "engines": {
+    "node": ">=22.12"
+  },
   "scripts": {
-    "test": "node_modules/.bin/mocha test --recursive"
+    "test": "node --test test/*.js",
+    "coverage": "node --test --experimental-test-coverage --test-coverage-include='lib/**' test/*.js"
   },
   "bugs": "https://github.com/glintik/loggj/issues",
   "repository": {

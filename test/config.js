@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+var { describe, it, beforeEach, afterEach, mock } = require('node:test');
 var assert = require('assert');
 var os = require('os');
 var path = require('path');
@@ -16,23 +17,9 @@ function tmp() {
     'rufus-' + NOW + '-' + process.pid + '-' + (counter++));
 }
 
-function spy() {
-  var args = [];
-  var fn = function () {
-    args.push(arguments);
-  };
-  fn.getCallCount = function () {
-    return args.length;
-  };
-  fn.getLastArgs = function () {
-    return args[args.length - 1];
-  };
-  return fn;
-}
-
 function SpyHandler() {
   rufus.Handler.apply(this, arguments);
-  this.spy = spy();
+  this.spy = mock.fn();
 }
 util.inherits(SpyHandler, rufus.Handler);
 SpyHandler.prototype.emit = function spyEmit(record, callback) {
@@ -55,7 +42,7 @@ describe('basicConfig', function () {
     rufus._level = oldLevel;
   });
 
-  it('root logger calls basicConfig', function (done) {
+  it('root logger calls basicConfig', function () {
     var val;
     var stream = {
       write: function (out, cb) {
@@ -68,10 +55,9 @@ describe('basicConfig', function () {
       oldBasic({ stream: stream, format: '%message' });
     };
 
-    rufus.info('danger').then(function () {
+    return rufus.info('danger').then(function () {
       assert.strictEqual(val, 'danger');
       assert.strictEqual(rufus._level, oldLevel);
-      done();
     });
   });
 
@@ -111,7 +97,7 @@ describe('basicConfig', function () {
 });
 
 describe('config', function () {
-  it('should be able to configure logging', function (done) {
+  it('should be able to configure logging', function () {
     rufus.config({
       formatters: {
         'basic': '%message',
@@ -155,19 +141,61 @@ describe('config', function () {
     var msg = handler.format({ message: 'hi', args: [ 'hi' ], levelname: 'BAR'});
     assert.strictEqual(msg, 'foo! BAR: hi');
 
-    log.debug('user').then(function () {
-      assert.strictEqual(handler.spy.getCallCount(), 0);
+    return log.debug('user').then(function () {
+      assert.strictEqual(handler.spy.mock.callCount(), 0);
 
       return log.info('user foo');
     }).then(function () {
-        assert.strictEqual(handler.spy.getCallCount(), 1);
-        assert.strictEqual(handler.spy.getLastArgs()[0].message, 'user foo');
+        assert.strictEqual(handler.spy.mock.callCount(), 1);
+        assert.strictEqual(handler.spy.mock.calls[0].arguments[0].message, 'user foo');
 
         return log.info('ignore me');
       }).then(function () {
-        assert.strictEqual(handler.spy.getCallCount(), 1);
-        done();
+        assert.strictEqual(handler.spy.mock.callCount(), 1);
       });
+  });
+
+  it('should add filters to logger by name', function () {
+    rufus.config({
+      filters: {
+        'user': /\buser\b/
+      },
+      handlers: {
+        'spy': {
+          'class': SpyHandler
+        }
+      },
+      loggers: {
+        'qqq.filtered': {
+          'level': 'INFO',
+          'propagate': false,
+          'handlers': ['spy'],
+          'filters': ['user']
+        }
+      }
+    });
+
+    var log = rufus.getLogger('qqq.filtered');
+    var handler = log._handlers[0];
+
+    return log.info('user foo').then(function () {
+      return log.info('ignore me');
+    }).then(function () {
+      assert.strictEqual(handler.spy.mock.callCount(), 1);
+      assert.strictEqual(handler.spy.mock.calls[0].arguments[0].message, 'user foo');
+    });
+  });
+
+  it('should throw for unknown logger filter', function () {
+    assert.throws(function () {
+      rufus.config({
+        loggers: {
+          'qqq.unknown': {
+            'filters': ['missing']
+          }
+        }
+      });
+    }, /There is no filter with name: missing/);
   });
 
   it('should be able to config with just JSON', function () {

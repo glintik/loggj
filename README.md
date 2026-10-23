@@ -1,7 +1,22 @@
 # loggj
 
 This is a fork of [rufus](https://github.com/btd/rufus). Added file rotation handler with multiprocess/node cluster support. Rotation by size or time is not exact for better performance.
-ES6 support required, tested with Node 4.
+Requires Node.js >= 22.12. Tested with Node 22, 24, 26.
+
+## Upgrading from 1.x
+
+2.0.0 brings support of Node 23+ and removes most of dependencies. Breaking changes:
+
+- Node.js >= 22.12 is required.
+- `chalk` is not a dependency anymore, ConsoleHandler colorizes messages with built-in `util.styleText`.
+  Colored output is the same, but loggj no longer sets `chalk.enabled = true` on a shared `chalk@1` instance,
+  so if your app relied on that side effect, enable colors in chalk by yourself.
+- An object passed to a log method as last argument which is `instanceof Error` but not a native error
+  (e.g. `Object.create(Error.prototype)`) goes to `record.err` again on every Node version.
+  In 1.0.11 on Node 23+ such objects stayed in `record.args`.
+
+Custom handlers written with `loggj.Handler.call(this, options)` and `util.inherits` work as before.
+See [CHANGELOG](CHANGELOG.md) for the full list of changes.
 
 ## Getting started
 
@@ -267,7 +282,7 @@ The power of logger hierarchies can seen more when using [loggj.config](#config)
 
 ### Logging Exceptions
 
-Any time you pass an exception (an `Error`!) to a log method as last argument, the stack
+Any time you pass an exception (an `Error` or anything that is `instanceof Error`) to a log method as last argument, the stack
 will be included in the output (if in format presented `%err` or `%error`).
 
 ```js
@@ -315,7 +330,7 @@ Just like Loggers, if a message's level is not equal to or greater than the Hand
 new 'console'(options);
 ```
 
-The Console handler outputs messages to the `stdio` or `stderr` (if level >= `WARN`), just like `console.log()` would. By default it colorize messages.
+The Console handler outputs messages to the `stdio` or `stderr` (if level >= `WARN`), just like `console.log()` would. By default it colorize messages (with built-in `util.styleText`, even if output is not a TTY or `NO_COLOR` is set), pass `colorize: false` to disable it.
 
 ### StreamHandler
 

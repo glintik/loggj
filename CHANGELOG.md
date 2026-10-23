@@ -1,4 +1,25 @@
-# rufus ChangeLog
+# ChangeLog
+
+## 2.0.0 - 2026-10-23
+
+### Breaking changes
+
+ - Node.js >= 22.12 is required (`engines` field added). Node 20 and older are not supported.
+ - `chalk` dependency removed. ConsoleHandler colorizes messages with built-in `util.styleText`, escape codes are the same as before.
+   loggj no longer sets `chalk.enabled = true` on a shared `chalk@1` instance.
+ - Last argument of a log call which is `instanceof Error` but not a native error goes to `record.err` again on every Node version
+   (in 1.0.11 on Node 23+ it stayed in `record.args`).
+
+### Changes
+
+ - Fix Node 23+ support: `makeFilter(RegExp)` and RegExp filters in `config()` threw `TypeError` because `util.isRegExp` was removed.
+ - Replace `util.isError` workaround with `util.types.isNativeError` and `instanceof Error`.
+ - Fix `config()`: logger `filters` by name always threw `There is no filter with name`.
+ - Fix RotatingFileHandler: when log file was removed, it was reopened but its size was not read, so rotation check was skipped.
+ - `stack-trace` dependency removed, call sites for `loggj.console()` are taken with V8 stack trace API directly.
+ - `lockfile` updated to ^1.0.4. It is the only runtime dependency now.
+ - Tests moved to built-in `node:test`, `mocha` and `sinon` removed, no dev dependencies left. Added `npm run coverage`.
+ - Restored tests for RotatingFileHandler and `handleExceptions`, added tests for ConsoleHandler colors and `ttyonly`.
 
 ## 0.5.7 - 2014-12-18
 

@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+var { describe, it } = require('node:test');
 var assert = require('assert');
 var EventEmitter = require('events').EventEmitter;
 var fs = require('fs');
@@ -9,8 +10,6 @@ var os = require('os');
 var path = require('path');
 
 var rufus = require('../');
-
-var glob = require('../lib/utils/re-glob');
 
 var NOW = Date.now();
 var counter = 1;
@@ -24,7 +23,7 @@ function rec(msg, level) {
 }
 
 function bytes(x) {
-  var b = new Buffer(x);
+  var b = Buffer.alloc(x);
   b[0] = '<'.charCodeAt(0);
   b[b.length - 1] = '>'.charCodeAt(0);
   b.fill('a', 1, b.length - 1);
@@ -61,7 +60,7 @@ describe('Handler', function () {
       assert.doesNotThrow(h.handle.bind(h));
     });
 
-    it('should use filters on record', function (done) {
+    it('should use filters on record', function () {
       var h = new rufus.Handler();
       var lastRecord;
       h.emit = function (record, callback) {
@@ -70,13 +69,12 @@ describe('Handler', function () {
       };
 
       h.addFilter(rufus.makeFilter('foo'));
-      h.handle({ name: 'foo' }).then(function () {
+      return h.handle({ name: 'foo' }).then(function () {
         assert.strictEqual(lastRecord.name, 'foo');
 
         return h.handle({ name: 'foobar' });
       }).then(function () {
           assert.notEqual(lastRecord.name, 'foobar');
-          done();
         });
     });
   });
@@ -112,7 +110,7 @@ describe('Stream', function () {
   });
 
   describe('emit', function () {
-    it('should write message to stream', function (done) {
+    it('should write message to stream', function () {
       var out;
       var stream = {
         write: function (msg, fn) {
@@ -125,13 +123,12 @@ describe('Stream', function () {
         stream: stream,
         formatter: new rufus.Formatter('%message%n')
       });
-      handler.handle({ message: 'foo', args: ['foo'] }).then(function () {
+      return handler.handle({ message: 'foo', args: ['foo'] }).then(function () {
         assert.strictEqual(out, 'foo\n');
-        done();
       });
     });
 
-    it('should wait for flush on slow streams', function (done) {
+    it('should wait for flush on slow streams', function () {
       var out;
       var stream = new EventEmitter();
       stream.write = function write(data, fn) {
@@ -144,9 +141,8 @@ describe('Stream', function () {
         stream: stream,
         formatter: new rufus.Formatter('%message%n')
       });
-      handler.handle({ message: 'secret', args: ['secret'] }).then(function () {
+      return handler.handle({ message: 'secret', args: ['secret'] }).then(function () {
         assert.strictEqual(out, 'secret\n');
-        done();
       });
     });
   });
@@ -174,18 +170,14 @@ describe('File', function () {
   });
 
   describe('handle', function () {
-    it('should write to the file', function (done) {
+    it('should write to the file', function () {
       var filename = tmp();
       var handler = new rufus.handlers.File({
         file: filename,
         formatter: new rufus.Formatter('%message%n')
       });
-      handler.handle({ message: 'recon', args: ['recon'] }).then(function () {
-        fs.readFile(filename, function (err, contents) {
-          assert.ifError(err);
-          assert.equal(contents.toString(), 'recon\n');
-          done();
-        });
+      return handler.handle({ message: 'recon', args: ['recon'] }).then(function () {
+        assert.equal(fs.readFileSync(filename).toString(), 'recon\n');
       });
     });
   });
@@ -201,7 +193,7 @@ describe('Console', function () {
   });
 
   describe('handle', function () {
-    it('should send low priority messages to stdout', function (done) {
+    it('should send low priority messages to stdout', function () {
       var h = new rufus.handlers.Console({
         formatter: new rufus.Formatter('%message%n'),
         colorize: false
@@ -215,13 +207,12 @@ describe('Console', function () {
         }
       };
 
-      h.handle({ level: rufus.INFO, message: 'oscar mike', args: ['oscar mike'] }).then(function () {
+      return h.handle({ level: rufus.INFO, message: 'oscar mike', args: ['oscar mike'] }).then(function () {
         assert.strictEqual(val, 'oscar mike\n');
-        done();
       });
     });
 
-    it('should send warn and higher messages to stderr', function (done) {
+    it('should send warn and higher messages to stderr', function () {
       var h = new rufus.handlers.Console({
         formatter: new rufus.Formatter('%message%n'),
         colorize: false
@@ -235,101 +226,246 @@ describe('Console', function () {
         }
       };
 
-      h.handle({ level: rufus.WARN, message: 'mayday', args: ['mayday'] }).then(function () {
+      return h.handle({ level: rufus.WARN, message: 'mayday', args: ['mayday'] }).then(function () {
         assert.strictEqual(val, 'mayday\n');
-      }).then(done);
-    });
-  });
-});
-
-/*describe('RotatingFileHandler', function () {
-  describe('handle', function () {
-    it('with maxSize should create new files', function (done) {
-      this.timeout(5000);
-
-      var filename = tmp();
-      var handler = new rufus.handlers.Rotating({
-        file: filename,
-        maxSize: 64,
-        formatter: new rufus.Formatter('%message%n')
       });
-
-      assert.strictEqual(handler._file, filename);
-      handler.handle(rec(bytes(60)));
-      handler.handle(rec(bytes(50)));
-      handler.handle(rec(bytes(45))).then(function () {
-        assert.strictEqual(fs.statSync(filename).size, 46);
-        assert.strictEqual(fs.statSync(filename + '.1').size, 51);
-        assert.strictEqual(fs.statSync(filename + '.2').size, 61);
-      }).done(done);
     });
 
-    it('with maxSize should create new files date rated', function (done) {
-      this.timeout(5000);
-
-      var filename = tmp();
-      var handler = new rufus.handlers.Rotating({
-        file: filename,
-        timeRate: 200,
-        maxFiles: 2,
+    it('should colorize messages by level', async function () {
+      var h = new rufus.handlers.Console({
         formatter: new rufus.Formatter('%message%n')
       });
-
-      var times = 0;
-      var interval = setInterval(function() {
-        handler.handle(rec(bytes(50)));
-        times += 1;
-        if(times > 3) {
-          clearInterval(interval);
-          handler.handle(rec(bytes(45))).then(function () {
-            //glob(handler._remover.filesFormat, function(err, matches) {
-            //  console.log(matches);
-            //});
-            //should be 2 files, but i have no idea how correctly test it +1 current
-            assert(true);
-          }).done(done);
+      var out = [];
+      h._out._stream = h._err._stream = {
+        write: function (data, callback) {
+          out.push(data);
+          callback();
+          return true;
         }
-      }, 250);
+      };
+
+      var expected = [
+        [rufus.VERBOSE, '\u001b[36mmsg\n\u001b[39m'],
+        [rufus.DEBUG, '\u001b[34mmsg\n\u001b[39m'],
+        [rufus.INFO, '\u001b[32mmsg\n\u001b[39m'],
+        [rufus.WARN, '\u001b[33mmsg\n\u001b[39m'],
+        [rufus.ERROR, '\u001b[31mmsg\n\u001b[39m'],
+        [rufus.CRITICAL, '\u001b[35mmsg\n\u001b[39m']
+      ];
+      for (var e of expected) {
+        await h.handle({ level: e[0], message: 'msg', args: ['msg'] });
+      }
+      assert.deepStrictEqual(out, expected.map(function (e) { return e[1]; }));
     });
 
-    it('with maxFiles should not create more than max', function (done) {
-      this.timeout(5000);
-
-      var filename = tmp();
-      var handler = new rufus.handlers.Rotating({
-        file: filename,
-        maxSize: 64,
-        maxFiles: 3,
-        formatter: new rufus.Formatter('%message%n')
+    it('should keep colors of colored message parts', async function () {
+      var h = new rufus.handlers.Console({
+        formatter: new rufus.Formatter('%message')
       });
+      var val;
+      h._out._stream = {
+        write: function (data, callback) {
+          val = data;
+          callback();
+          return true;
+        }
+      };
 
-      handler.handle({ message: bytes(50), args: [bytes(50)] });
-      handler.handle({ message: bytes(55), args: [bytes(55)] });
-      handler.handle({ message: bytes(60), args: [bytes(60)] });
-      handler.handle({ message: bytes(45), args: [bytes(45)] }).then(function () {
-        assert.strictEqual(fs.statSync(filename).size, 46);
-        assert.strictEqual(fs.statSync(filename + '.1').size, 61);
-        assert.strictEqual(fs.statSync(filename + '.2').size, 56);
-        assert(!fs.existsSync(filename + '.3'));
-      }).done(done);
+      var msg = 'a \u001b[31mred\u001b[39m b';
+      await h.handle({ level: rufus.INFO, message: msg, args: [msg] });
+      assert.strictEqual(val, '\u001b[32ma \u001b[31mred\u001b[32m b\u001b[39m');
     });
 
-    it('should continue to write after buffer is flushed', function (done) {
-      this.timeout(5000);
-
-      var filename = tmp();
-      var handler = new rufus.handlers.Rotating({
-        file: filename,
-        maxSize: 64,
-        formatter: new rufus.Formatter('%message%n')
+    it('should not colorize empty output', async function () {
+      var h = new rufus.handlers.Console({
+        formatter: new rufus.Formatter('%message')
       });
+      var val;
+      h._out._stream = {
+        write: function (data, callback) {
+          val = data;
+          callback();
+          return true;
+        }
+      };
 
-      handler.handle({ message: bytes(29), args: [bytes(29)] }).then(function () {
-        return handler.handle({ message: bytes(31), args: [bytes(31)] });
-      }).then(function () {
-          assert.strictEqual(fs.statSync(filename).size, 62);
-        }).done(done);
+      await h.handle({ level: rufus.INFO, message: '', args: [''] });
+      assert.strictEqual(val, '');
+    });
+
+    it('should skip output with ttyonly when stdout is not a TTY', async function () {
+      var h = new rufus.handlers.Console({ ttyonly: true });
+      var written = false;
+      h._out._stream = h._err._stream = {
+        write: function (data, callback) {
+          written = true;
+          callback();
+          return true;
+        }
+      };
+
+      var isTTY = process.stdout.isTTY;
+      process.stdout.isTTY = false;
+      try {
+        await h.handle({ level: rufus.INFO, message: 'msg', args: ['msg'] });
+        await h.handle({ level: rufus.ERROR, message: 'msg', args: ['msg'] });
+      } finally {
+        process.stdout.isTTY = isTTY;
+      }
+      assert.strictEqual(written, false);
     });
   });
 });
-*/
+
+describe('RotatingFileHandler', function () {
+  function sleep(ms) {
+    return new Promise(function (resolve) {
+      setTimeout(resolve, ms);
+    });
+  }
+
+  function tmpDir() {
+    return fs.mkdtempSync(path.join(os.tmpdir(), 'rufus-rotating-'));
+  }
+
+  function list(dir) {
+    return fs.readdirSync(dir).sort();
+  }
+
+  function contents(dir) {
+    return list(dir).map(function (f) {
+      return fs.readFileSync(path.join(dir, f)).toString();
+    }).join('');
+  }
+
+  // file size is checked not often than once per 50ms, so writes are spread in time
+  async function write(handler, sizes) {
+    for (var size of sizes) {
+      await handler.handle(rec(bytes(size)));
+      await sleep(100);
+    }
+  }
+
+  async function close(handler, dir) {
+    clearTimeout(handler._rotateTimeout);
+    await sleep(100);
+    clearTimeout(handler._rotateTimeout);
+    handler._stream.end();
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+
+  it('with maxSize should create new files', { timeout: 10000 }, async function () {
+    var dir = tmpDir();
+    var filename = path.join(dir, 'app.log');
+    var handler = new rufus.handlers.Rotating({
+      file: filename,
+      maxSize: 64,
+      maxFiles: 10,
+      formatter: new rufus.Formatter('%message%n')
+    });
+
+    assert.strictEqual(handler._file, filename);
+    var sizes = [30, 40, 50, 60, 45];
+    await write(handler, sizes);
+
+    var files = list(dir);
+    assert.ok(files.includes('app.log.1'), files.join());
+    assert.ok(files.every(function (f) { return /^app\.log(\.\d+)?$/.test(f); }), files.join());
+    // nothing lost or broken
+    var written = sizes.map(function (size) { return bytes(size) + '\n'; });
+    assert.deepStrictEqual(contents(dir).split('\n').slice(0, -1).sort(),
+      written.map(function (r) { return r.slice(0, -1); }).sort());
+
+    await close(handler, dir);
+  });
+
+  it('with maxFiles should not keep more than max old files', { timeout: 10000 }, async function () {
+    var dir = tmpDir();
+    var filename = path.join(dir, 'app.log');
+    var handler = new rufus.handlers.Rotating({
+      file: filename,
+      maxSize: 64,
+      maxFiles: 3,
+      formatter: new rufus.Formatter('%message%n')
+    });
+
+    await write(handler, [50, 50, 50, 50, 50, 50, 50, 50, 50, 50]);
+
+    assert.deepStrictEqual(list(dir), ['app.log', 'app.log.1', 'app.log.2', 'app.log.3']);
+    contents(dir).split('\n').slice(0, -1).forEach(function (line) {
+      assert.strictEqual(line, bytes(50));
+    });
+
+    await close(handler, dir);
+  });
+
+  it('should continue to write to the main file after rotation', { timeout: 10000 }, async function () {
+    var dir = tmpDir();
+    var filename = path.join(dir, 'app.log');
+    var handler = new rufus.handlers.Rotating({
+      file: filename,
+      maxSize: 64,
+      formatter: new rufus.Formatter('%message%n')
+    });
+
+    for (var i = 0; i < 10 && !fs.existsSync(filename + '.1'); i++) {
+      await write(handler, [40]);
+    }
+    assert.ok(fs.existsSync(filename + '.1'));
+
+    await write(handler, [10]);
+    assert.strictEqual(fs.readFileSync(filename).toString(), bytes(10) + '\n');
+
+    await close(handler, dir);
+  });
+
+  it('should recreate removed file', { timeout: 10000 }, async function () {
+    var dir = tmpDir();
+    var filename = path.join(dir, 'app.log');
+    var handler = new rufus.handlers.Rotating({
+      file: filename,
+      maxSize: 64,
+      formatter: new rufus.Formatter('%message%n')
+    });
+
+    await write(handler, [10]);
+    fs.unlinkSync(filename);
+
+    assert.deepStrictEqual(await handler._getData(), [0]);
+    assert.ok(fs.existsSync(filename));
+
+    await write(handler, [20]);
+    assert.strictEqual(fs.readFileSync(filename).toString(), bytes(20) + '\n');
+
+    await close(handler, dir);
+  });
+
+  it('with time rule should rotate files by time', { timeout: 10000 }, async function () {
+    var dir = tmpDir();
+    var filename = path.join(dir, 'app.log');
+    var handler = new rufus.handlers.Rotating({
+      file: filename,
+      rule: 'time',
+      timeRate: 'everysecond',
+      maxFiles: 2,
+      formatter: new rufus.Formatter('%message%n')
+    });
+
+    for (var i = 0; i < 5; i++) {
+      await write(handler, [20]);
+      await sleep(600);
+    }
+    clearTimeout(handler._rotateTimeout);
+    await sleep(100);
+
+    var files = list(dir);
+    var archives = files.filter(function (f) { return f !== 'app.log'; });
+    assert.ok(files.includes('app.log'), files.join());
+    assert.ok(archives.length >= 1 && archives.length <= 2, files.join());
+    archives.forEach(function (f) {
+      assert.match(f, /^app\.log-\d{14}$/);
+    });
+
+    await close(handler, dir);
+  });
+});
